@@ -19,12 +19,11 @@ app.post('/render', express.json(), function (request, response) {
         return;
     }
 
-    eval(request.body.position)
-
     let i = 0;
-    for (const body_info of initial_bodies) {  
+    for (const body_info of initial_bodies) {
         const isValid = typeof body_info.position != 'undefined' &&
                         typeof body_info.velocity != 'undefined' &&
+                        eval(`body_info.position.__proto__ == ${body_info.position.__proto__}`)
                         typeof body_info.position.x == 'number' &&
                         typeof body_info.position.y == 'number' &&
                         typeof body_info.velocity.x == 'number' &&
