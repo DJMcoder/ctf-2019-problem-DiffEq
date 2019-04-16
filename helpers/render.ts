@@ -131,8 +131,7 @@ export function render(initial_bodies: Body[], time_interval: number, duration: 
     while (current_time < duration) {
         if (number_of_frames > 2 && current_time > next_frame_time) {
             const frame = Array.from(bodies).map(body => body.toFrame()); 
-            rendered_frames.push(frame)
-            console.log(JSON.stringify(rendered_frames))
+            rendered_frames.push(frame);
             next_frame_time += frame_interval;
         }
 

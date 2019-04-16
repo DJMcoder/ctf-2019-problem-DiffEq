@@ -24,6 +24,9 @@ const exampleBody2 = {
 
 function renderAndPlay(initial_bodies, time_interval, duration, gravitational_constant, number_of_frames) {
     disableForms()
+    
+    $('body').addClass('disabled');
+
     $.ajax({
         url: '/render',
         method: 'POST',
@@ -37,8 +40,10 @@ function renderAndPlay(initial_bodies, time_interval, duration, gravitational_co
         }),
         contentType: 'application/json; charset=utf-8'
     })
-    .then(function (frames) {
-        drawFrames(frames, duration/number_of_frames);
+    .then(function (response) {
+        $('body').removeClass('disabled');
+        drawFrames(response.rendered_frames, duration/number_of_frames);
+        console.log(response.inputs)
     })
     .catch(error => {
         console.error(error);
@@ -53,6 +58,7 @@ var ctx = canvas.getContext("2d");
 var NUM_COLORS = 20;
 var colors = [];
 var displayBodies = [];
+var BIGGEST_RADIUS = 25;
 
 // https://stackoverflow.com/questions/1484506/random-color-generator
 function getRandomColor() {
@@ -80,11 +86,18 @@ function clearCanvas() {
 function drawFrame(frame) {
     clearCanvas();
 
+    var masses = [];
+    for (var index in frame) {
+        masses.push(frame[index].mass);
+    }
+
+    var largest_mass = Math.max(...masses)
+
     for (var index in frame) {
         var body = frame[index];
 
         ctx.beginPath();
-        ctx.arc(body.position.x, body.position.y, Math.min(Math.log(body.mass+1), 10), 0, 2 * Math.PI);
+        ctx.arc(body.position.x, body.position.y, Math.max(BIGGEST_RADIUS*body.mass/largest_mass, 5), 0, 2 * Math.PI);
         ctx.fillStyle = colors[index % colors.length];
         ctx.fill();
     }
@@ -121,6 +134,22 @@ function drawFrames(frames, frame_interval) {
     drawFrameHelper(frames, frame_interval, 0);
 } 
 
+var default_limits = {
+    position: {
+        x: { max: 400, min: 0 },
+        y: { max: 400, min: 0 },
+    },
+    velocity: {
+        x: { max: 10, min: -10 },
+        y: { max: 10, min: -10 },
+    },
+    mass: { max: 100000, min: 100 }
+}
+
+// https://gist.github.com/kerimdzhanov/7529623
+function randomBetween(min, max) {
+    return Math.random() * (max - min) + min;
+}
 
 $('#add-body').submit(function(e) {
     e.preventDefault();
@@ -139,6 +168,12 @@ $('#add-body').submit(function(e) {
 
     displayBodies.push(body);
     drawFrame(displayBodies);
+
+    $('#px').val(randomBetween(default_limits.position.x.min, default_limits.position.x.max).toFixed(4))
+    $('#py').val(randomBetween(default_limits.position.y.min, default_limits.position.y.max).toFixed(4))
+    $('#vx').val(randomBetween(default_limits.velocity.x.min, default_limits.velocity.x.max).toFixed(4))
+    $('#vy').val(randomBetween(default_limits.velocity.y.min, default_limits.velocity.y.max).toFixed(4))
+    $('#mass').val(randomBetween(default_limits.mass.min, default_limits.mass.max).toFixed(4))
 });
 
 $('#render').submit(function(e) {

@@ -25,12 +25,17 @@ app.post('/render', express_1.default.json(), function (request, response) {
         response.status(400).send('Data formatted incorrectly; initial_bodies should be array.');
         return;
     }
+    console.log(request.body);
+    const inputs = {};
+    for (const property of Object.keys(request.body)) {
+        console.log(request.body[property]);
+        inputs[property] = eval(request.body[property]);
+    }
     let i = 0;
     for (const body_info of initial_bodies) {
         const isValid = typeof body_info.position != 'undefined' &&
             typeof body_info.velocity != 'undefined' &&
-            eval(`body_info.position.__proto__ == ${body_info.position.__proto__}`);
-        typeof body_info.position.x == 'number' &&
+            typeof body_info.position.x == 'number' &&
             typeof body_info.position.y == 'number' &&
             typeof body_info.velocity.x == 'number' &&
             typeof body_info.velocity.y == 'number' &&
@@ -59,7 +64,7 @@ app.post('/render', express_1.default.json(), function (request, response) {
         return;
     }
     const rendered_frames = render_1.render(bodies, time_interval, duration, gravitational_constant, number_of_frames);
-    response.json(rendered_frames);
+    response.json({ rendered_frames, inputs });
 });
 app.use(express_1.default.static('static'));
 app.listen(PORT, () => {
